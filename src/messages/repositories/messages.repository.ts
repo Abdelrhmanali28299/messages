@@ -29,7 +29,9 @@ export class MessagesRepository implements Repository {
 
   async update(id: string, text: string): Promise<void> {
     const messages = await this.readFile();
-    console.log(messages, id);
+    if (!messages[id]) {
+      throw new Error('Message not found');
+    }
     messages[id].text = text;
 
     await writeFile(this.filePath, JSON.stringify(messages, null, 2));
@@ -37,6 +39,9 @@ export class MessagesRepository implements Repository {
 
   async delete(id: string): Promise<void> {
     const messages = await this.readFile();
+    if (!messages[id]) {
+      throw new Error('Message not found');
+    }
     delete messages[id];
 
     await writeFile(this.filePath, JSON.stringify(messages, null, 2));

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -19,25 +20,44 @@ export class MessagesController {
   }
 
   @Post()
-  createMessage(@Body() body: CreateMessageDto) {
-    const newId = this.service.create(body.text);
+  async createMessage(@Body() body: CreateMessageDto) {
+    const newId = await this.service.create(body.text);
     return 'Message created with ID: ' + newId;
   }
 
   @Get('/:id')
-  viewMessage(@Param('id') id: string) {
-    return this.service.view(id);
+  async viewMessage(@Param('id') id: string) {
+    const message = await this.service.view(id);
+    if (!message) {
+      throw new NotFoundException('Message not found');
+    }
+    return message;
   }
 
   @Put('/:id')
-  updateMessage(@Body() body: any, @Param('id') id: string): string {
-    this.service.update(id, body.text);
-    return 'Message updated!';
+  async updateMessage(
+    @Body() body: any,
+    @Param('id') id: string,
+  ): Promise<string | NotFoundException> {
+    try {
+      await this.service.update(id, body.text);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new NotFoundException('Message not found');
+      }
+    }
+    return id + ' Message updated!';
   }
 
   @Delete('/:id')
-  deleteMessage(@Param('id') id: string): string {
-    this.service.delete(id);
+  async deleteMessage(@Param('id') id: string): Promise<string | NotFoundException> {
+    try {
+      await this.service.delete(id);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new NotFoundException('Message not found');
+      }
+    }
     return 'Message deleted!';
   }
 }
